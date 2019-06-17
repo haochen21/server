@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<property name="LOG_HOME" value="./log" />
+	<appender name="SERVERFILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<append>true</append>
+		<File>${LOG_HOME}/server.log</File>
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>%d %p %C{1.} [%t] %m%n</pattern>
+		</layout>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<FileNamePattern>${LOG_HOME}/server%i.log</FileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>10</maxIndex>
+		</rollingPolicy>
+		<triggeringPolicy
+			class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<MaxFileSize>10240KB</MaxFileSize>
+		</triggeringPolicy>
+	</appender>	
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+			</Pattern>
+		</layout>
+	</appender>
+
+	<logger name="org.hibernate.type" additivity="false">
+		<level value="INFO" />
+		<appender-ref ref="STDOUT" />
+	</logger>
+
+	<root level="INFO">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="SERVERFILE" />
+	</root>
+
+</configuration>
