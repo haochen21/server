@@ -91,12 +91,19 @@ public class Product implements Serializable {
     protected Integer takeTimeLimit;
 
     @Column(name = "IMAGESOURCE")
-    @Size(min = 0, max = 255)
+    @Size(max = 255)
     protected String imageSource;
 
     @Column(name = "CODE")
-    @Size(min = 0, max = 10)
+    @Size(max = 10)
     protected String code;
+
+
+    @Column(name = "PROPERTY1")
+    protected String property1;
+
+    @Column(name = "PROPERTY2")
+    protected String property2;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(updatable = false)

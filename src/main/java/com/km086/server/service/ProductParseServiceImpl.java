@@ -9,6 +9,7 @@ import com.km086.server.model.store.ProductStatus;
 import com.km086.server.repository.security.OpenRangeRepository;
 import com.km086.server.repository.store.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -16,6 +17,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -40,6 +42,7 @@ public class ProductParseServiceImpl implements ProductParseService {
     @Autowired
     ProductRepository productRepository;
 
+    @Transactional
     @Override
     public void parse(Long merchantId, InputStream inputStream) {
         log.info("start parse excel......");
@@ -48,53 +51,17 @@ public class ProductParseServiceImpl implements ProductParseService {
             log.info("merchant id is: {}.", merchant.getId());
 
             Workbook workbook = new XSSFWorkbook(inputStream);
-            // 第一个sheet代表分类
-            List<Category> categoryList = new ArrayList<>();
-            Sheet categorySheet = workbook.getSheetAt(0);
-            for (Row row : categorySheet) {
-                if (row.getRowNum() == 0) {
-                    continue;
-                }
-
-                String name = row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
-                if (name.equals("")) {
-                    log.error("name is null.....");
-                    continue;
-                }
-                int sequence = (int) row.getCell(1, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getNumericCellValue();
-                Category category = new Category();
-                category.setName(name);
-                category.setSequence(sequence);
-                category.setMerchant(merchant);
-
-                categoryList.add(category);
-            }
-            Map<String, Category> categoryMap = processCategory(merchantId, categoryList);
-            for (Row row : categorySheet) {
-                if (row.getRowNum() == 0) {
-                    continue;
-                }
-                String name = row.getCell(0).getStringCellValue();
-                int sequence = (int) row.getCell(1).getNumericCellValue();
-                Category category = new Category();
-                category.setName(name);
-                category.setSequence(sequence);
-                category.setMerchant(merchant);
-
-                categoryList.add(category);
-            }
-
             // 第二个sheet代表营业时间
             List<OpenRange> openRanges = new ArrayList<>();
-            Sheet openRangeSheet = workbook.getSheetAt(1);
+            Sheet openRangeSheet = workbook.getSheetAt(0);
             SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
             for (Row row : openRangeSheet) {
                 if (row.getRowNum() == 0) {
                     continue;
                 }
-                int sequence = (int) row.getCell(1).getNumericCellValue();
-                Date startTime = format.parse(row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue() + ":00");
-                Date endTime = format.parse(row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue() + ":59");
+                int sequence = (int) row.getCell(0).getNumericCellValue();
+                Date startTime = row.getCell(1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
+                Date endTime = row.getCell(2, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getDateCellValue();
                 OpenRange openRange = new OpenRange();
                 openRange.setBeginTime(startTime);
                 openRange.setEndTime(endTime);
@@ -106,51 +73,88 @@ public class ProductParseServiceImpl implements ProductParseService {
             }
             Map<Integer, OpenRange> openRangeMap = processOpenRange(merchantId, openRanges);
 
-            // 第三个sheet代表产品
-            List<Product> products = new ArrayList<>();
-            Sheet productSheet = workbook.getSheetAt(2);
-            for (Row row : productSheet) {
+            // 第二个sheet代表商品，这里先处理分类
+            Map<String, Category> rawCcategoryMap = new HashMap<>();
+            Sheet categorySheet = workbook.getSheetAt(1);
+            for (Row row : categorySheet) {
                 if (row.getRowNum() == 0) {
                     continue;
                 }
-                Product product = new Product();
 
                 String name = row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
                 if (name.equals("")) {
                     log.error("name is null.....");
                     continue;
                 }
-                BigDecimal unitPrice = BigDecimal.valueOf(row.getCell(1).getNumericCellValue());
-                boolean needPay = row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue().equals("是") ? true : false;
-                String code = row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
-                int sequence = (int) row.getCell(1).getNumericCellValue();
-                int payTimeLimit = (int) row.getCell(1).getNumericCellValue();
-                ProductStatus productStatus = ProductStatus.getStatus(row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue());
-                String categoryName = row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
-                String openRangeSequence = row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
-                String description = row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
+                if (rawCcategoryMap.containsKey(name)) {
+                    continue;
+                }
+                int sequence = (int) row.getCell(1, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getNumericCellValue();
+                Category category = new Category();
+                category.setName(name);
+                category.setSequence(sequence);
+                category.setMerchant(merchant);
 
+                rawCcategoryMap.put(name, category);
+            }
+            Map<String, Category> categoryMap = processCategory(merchantId, rawCcategoryMap.values());
+
+
+            // 处理商品
+            List<Product> products = new ArrayList<>();
+            Sheet productSheet = workbook.getSheetAt(1);
+            for (Row row : productSheet) {
+                if (row.getRowNum() == 0) {
+                    continue;
+                }
+                Product product = new Product();
+
+                String categoryName = row.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
+                String name = row.getCell(2, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
+                int sequence = (int) row.getCell(3).getNumericCellValue();
+                BigDecimal unitPrice = BigDecimal.valueOf(row.getCell(4).getNumericCellValue());
+                DataFormatter formatter = new DataFormatter();
+                String code = "";
+                if (row.getCell(5) != null) {
+                    code = formatter.formatCellValue(row.getCell(5, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL));
+                }
+                String property1 = "";
+                if (row.getCell(6) != null) {
+                    property1 = row.getCell(6, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
+                }
+                String property2 = "";
+                if (row.getCell(7) != null) {
+                    property2 = row.getCell(7, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
+                }
+                String openRangeSequence = row.getCell(8, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
+                String description = "";
+                if (row.getCell(9) != null) {
+                    description = row.getCell(9, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL).getStringCellValue();
+                }
                 product.setName(name);
                 product.setUnitPrice(unitPrice);
                 product.setDescription(description);
                 product.setUnitsInStock(null);
                 product.setInfinite(true);
-                product.setNeedPay(needPay);
+                product.setNeedPay(true);
+                // 允许在当前营业时间段下单
                 product.setOpenRange(true);
-                product.setPayTimeLimit(payTimeLimit);
-                product.setTakeTimeLimit(null);
-                product.setStatus(productStatus);
+                product.setPayTimeLimit(10);
+                product.setTakeTimeLimit(0);
+                product.setStatus(ProductStatus.ONLINE);
                 product.setSequence(sequence);
                 product.setCode(code);
+                product.setProperty1(property1);
+                product.setProperty2(property2);
                 product.setMerchant(merchant);
-                if (categoryMap.containsKey(categoryName)) {
-                    product.setCategory(categoryMap.get(categoryName));
-                }
+                product.setCategory(categoryMap.get(categoryName));
                 if (!openRangeSequence.equals("")) {
-                    String[] openRangeSequences = openRangeSequence.split(",");
+                    String[] openRangeSequences = openRangeSequence.split("=");
                     for (String sequenceStr : openRangeSequences) {
                         int openRangeValue = Integer.parseInt(sequenceStr);
                         if (openRangeMap.containsKey(openRangeValue)) {
+                            openRangeMap.get(openRangeValue).setMerchant(merchant);
+                            openRangeMap.get(openRangeValue).setProducts(null);
                             product.getOpenRanges().add(openRangeMap.get(openRangeValue));
                         }
                     }
@@ -167,7 +171,7 @@ public class ProductParseServiceImpl implements ProductParseService {
         log.info("end parse excel.......");
     }
 
-    private Map<String, Category> processCategory(Long merchantId, List<Category> categories) {
+    private Map<String, Category> processCategory(Long merchantId, Collection<Category> categories) {
         Map<String, Category> categoryMap = new HashMap<>();
         List<Category> dbCategories = storeService.findCategorysByMerchant(merchantId);
         Map<String, Category> dbCategoryMap = dbCategories.stream()
@@ -240,6 +244,8 @@ public class ProductParseServiceImpl implements ProductParseService {
                     dbProduct.setOpenRanges(product.getOpenRanges());
                     dbProduct.setSequence(product.getSequence());
                     dbProduct.setCode(product.getCode());
+                    dbProduct.setProperty1(product.getProperty1());
+                    dbProduct.setProperty2(product.getProperty2());
                     productRepository.save(dbProduct);
 
                     exist = true;
