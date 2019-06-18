@@ -13,4 +13,16 @@ public enum ProductStatus {
     public String getDescription() {
         return description;
     }
+
+    public static ProductStatus getStatus(String status) {
+        if (status.equals("上架")) {
+            return ONLINE;
+        } else if (status.equals("下架")) {
+            return OFFLINE;
+        } else if (status.equals("删除")) {
+            return DELETE;
+        } else {
+            return null;
+        }
+    }
 }

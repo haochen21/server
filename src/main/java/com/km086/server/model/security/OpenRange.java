@@ -5,20 +5,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -63,9 +50,12 @@ public class OpenRange implements Serializable {
     protected Merchant merchant;
 
     @ManyToMany(mappedBy = "openRanges")
-    protected Set<Product> products = new HashSet<Product>();
+    protected Set<Product> products = new HashSet<>();
 
     private static final long serialVersionUID = -4343731302412808649L;
+
+    @Transient
+    private int sequence;
 
     @Override
     public int hashCode() {

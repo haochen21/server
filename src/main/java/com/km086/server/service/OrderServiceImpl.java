@@ -268,7 +268,8 @@ public class OrderServiceImpl implements OrderService {
         if (takeNoValue >= 9999) {
             redisTemplate.opsForValue().set(redisKey, "0");
         }
-
+        String takeNo = String.format("%04d", takeNoValue);
+        cart.setTakeNo("" + takeNo);
 
         // save cart
         cartRepository.saveAndFlush(cart);

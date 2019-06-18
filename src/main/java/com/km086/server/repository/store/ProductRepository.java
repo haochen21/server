@@ -14,6 +14,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProductRepository extends BaseRepository<Product, Long> {
 
+    @Query(value = "select p from Product p where p.merchant.id = :merchantId")
+    List<Product> findAllByMerchant(@Param("merchantId") Long merchantId);
+
     @Query(value = "select p from Product p where p.merchant.id = :merchantId and p.status = :status")
     List<Product> findByMerchant(@Param("merchantId") Long merchantId, @Param("status") ProductStatus status);
 
