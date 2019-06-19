@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.km086.server.config.ConfigProperties;
+import com.km086.server.service.ProductParseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,9 @@ public class StoreController {
 
     @Autowired
     private ConfigProperties configProperties;
+
+    @Autowired
+    ProductParseService productParseService;
 
     private final static Logger logger = LoggerFactory.getLogger(StoreController.class);
 
@@ -168,5 +172,19 @@ public class StoreController {
         return ResponseEntity.ok().contentLength(in.available())
                 .contentType(MediaType.parseMediaType("image/png"))
                 .body(new InputStreamResource(in));
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = "/product/excel/{merchantId}", method = RequestMethod.POST)
+    @ResponseBody
+    public String uploadProductExcel(@RequestParam("file") MultipartFile file,
+                              @PathVariable Long merchantId) {
+        logger.info("upload excel,merchantId: {}." ,merchantId);
+        try{
+            productParseService.parse(merchantId,file.getInputStream());
+        }catch(Exception ex){
+            return "error";
+        }
+        return "success";
     }
 }

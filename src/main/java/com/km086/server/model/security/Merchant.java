@@ -155,6 +155,9 @@ public class Merchant implements Serializable {
     @Column(name = "SHOWINTRODUCE")
     protected Boolean showIntroduce;
 
+    @Column(name = "PRINTVOICE")
+    protected Boolean printVoice;
+
     @OneToMany(mappedBy = "merchant", cascade = {CascadeType.PERSIST, CascadeType.REFRESH}, orphanRemoval = true)
     protected Collection<Category> categorys = new ArrayList<Category>();
 

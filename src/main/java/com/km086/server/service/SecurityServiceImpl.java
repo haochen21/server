@@ -120,7 +120,7 @@ public class SecurityServiceImpl implements SecurityService {
         dbMerchant.setMinimumOrder(merchant.getMinimumOrder());
         dbMerchant.setShowIntroduce(merchant.getShowIntroduce());
         dbMerchant.setPackageFee(merchant.getPackageFee());
-
+        dbMerchant.setPrintVoice(merchant.getPrintVoice());
         return merchantRepository.save(dbMerchant);
     }
 

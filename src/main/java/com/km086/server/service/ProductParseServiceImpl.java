@@ -166,6 +166,7 @@ public class ProductParseServiceImpl implements ProductParseService {
             processProduct(merchantId, products);
         } catch (Exception ex) {
             log.error("", ex);
+            throw new RuntimeException(ex.getMessage());
         }
 
         log.info("end parse excel.......");

@@ -4,5 +4,5 @@ import java.io.InputStream;
 
 public interface ProductParseService {
 
-    void parse(Long merchantId,InputStream inputStream);
+    void parse(Long merchantId,InputStream inputStream) throws RuntimeException ;
 }
