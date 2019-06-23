@@ -38,4 +38,8 @@ public interface ProductRepository extends BaseRepository<Product, Long> {
 
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Product p where p.merchant.id = :merchantId and p.name = :name")
     Boolean existsByName(@Param("merchantId") Long merchantId, @Param("name") String name);
+
+    @Modifying
+    @Query(value = "UPDATE Product p set p.needPay = :needPay where p.merchant.id = :merchantId")
+    void updateNeedPay(@Param("needPay") Boolean needPay, @Param("merchantId") Long merchantId);
 }

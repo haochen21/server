@@ -20,7 +20,7 @@ public class ProductParseServiceTest {
     @Test
     public void parseExcel() {
         try{
-            InputStream is = new FileInputStream(new File("C:\\Users\\Lenovo\\Documents\\商户上传菜单.xlsx"));
+            InputStream is = new FileInputStream(new File("C:\\Users\\Lenovo\\Documents\\商户上传菜单(4016171).xlsx"));
             productParseService.parse(new Long(4009548), is);
         }catch(Exception ex){
             ex.printStackTrace();

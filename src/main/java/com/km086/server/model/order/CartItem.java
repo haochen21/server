@@ -2,17 +2,10 @@ package com.km086.server.model.order;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -51,6 +44,10 @@ public class CartItem implements Serializable {
     @NotNull
     @Column(name = "TOTALPRICE", nullable = false)
     protected BigDecimal totalPrice;
+
+    @Column(name = "SELECTPROPERTIES")
+    @Convert(converter = SelectProductPropertyConverter.class)
+    protected List<SelectProductProperty> selectProductProperties = new ArrayList<>();
 
     @NotNull
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

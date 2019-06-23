@@ -2,29 +2,9 @@ package com.km086.server.model.store;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
-import javax.persistence.Version;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -98,13 +78,6 @@ public class Product implements Serializable {
     @Size(max = 10)
     protected String code;
 
-
-    @Column(name = "PROPERTY1")
-    protected String property1;
-
-    @Column(name = "PROPERTY2")
-    protected String property2;
-
     @Temporal(TemporalType.TIMESTAMP)
     @Column(updatable = false)
     @org.hibernate.annotations.CreationTimestamp
@@ -122,6 +95,10 @@ public class Product implements Serializable {
 
     @Column(name = "SEQUENCE")
     protected Integer sequence;
+
+    @Column(name = "PROPERTIES")
+    @Convert(converter = ProductPropertyConverter.class)
+    protected List<ProductProperty> productProperties = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CATEGORY_ID")

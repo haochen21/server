@@ -72,6 +72,7 @@ public class StoreServiceImpl implements StoreService {
         megerProduct.setOpenRanges(product.getOpenRanges());
         megerProduct.setSequence(product.getSequence());
         megerProduct.setCode(product.getCode());
+        megerProduct.setProductProperties(product.getProductProperties());
 
         return productRepository.save(megerProduct);
     }
@@ -211,4 +212,9 @@ public class StoreServiceImpl implements StoreService {
         return categoryRepository.findByMerchant(merchantId);
     }
 
+    @Override
+    @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
+    public void updateNeedPay(boolean needPay, Long merchantId) {
+        productRepository.updateNeedPay(needPay, merchantId);
+    }
 }

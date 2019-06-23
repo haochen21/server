@@ -130,6 +130,12 @@ public class StoreController {
         return storeService.existProductByName(merchantId, name);
     }
 
+    @RequestMapping(value = "/product/needPay", method = RequestMethod.PUT)
+    public void updateProductNeedPayByMerchant(@RequestParam(value = "merchantId", required = true) Long merchantId,
+                                               @RequestParam(value = "needPay", required = true) boolean needPay) {
+        storeService.updateNeedPay(needPay, merchantId);
+    }
+
     @CrossOrigin
     @RequestMapping(value = "/product/image", method = RequestMethod.POST)
     public @ResponseBody
@@ -175,14 +181,14 @@ public class StoreController {
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/product/excel/{merchantId}", method = RequestMethod.POST)
+    @RequestMapping(value = "/upload/excel", method = RequestMethod.POST)
     @ResponseBody
     public String uploadProductExcel(@RequestParam("file") MultipartFile file,
-                              @PathVariable Long merchantId) {
-        logger.info("upload excel,merchantId: {}." ,merchantId);
-        try{
-            productParseService.parse(merchantId,file.getInputStream());
-        }catch(Exception ex){
+                                     @RequestParam("merchantId") Long merchantId) {
+        logger.info("upload excel,merchantId: {}.", merchantId);
+        try {
+            productParseService.parse(merchantId, file.getInputStream());
+        } catch (Exception ex) {
             return "error";
         }
         return "success";

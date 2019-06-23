@@ -225,7 +225,9 @@ public class OrderServiceImpl implements OrderService {
             if (!product.getInfinite()) {
                 product.setUnitsInStock(product.getUnitsInStock() - cartItem.getQuantity());
             }
-            product.setUnitsInOrder(product.getUnitsInOrder() + cartItem.getQuantity());
+            if(product.getUnitsInOrder() != null){
+                product.setUnitsInOrder(product.getUnitsInOrder() + cartItem.getQuantity());
+            }
 
             if (product.getNeedPay()) {
                 needPay = true;

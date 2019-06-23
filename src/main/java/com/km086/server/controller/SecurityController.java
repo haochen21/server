@@ -391,7 +391,6 @@ public class SecurityController {
         }
     }
 
-    @CrossOrigin
     @RequestMapping(value = "/merchant/image/{fileName}", method = RequestMethod.GET)
     @ResponseBody
     public ResponseEntity<InputStreamResource> downloadUserAvatarImage(@PathVariable String fileName)

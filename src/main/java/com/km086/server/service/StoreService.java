@@ -35,4 +35,6 @@ public interface StoreService {
     Category findCategory(Long categoryId);
 
     List<Category> findCategorysByMerchant(Long merchantId);
+
+    void updateNeedPay(boolean needPay,Long merchantId);
 }
